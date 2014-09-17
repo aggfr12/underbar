@@ -100,11 +100,16 @@ var _ = {};
       return [];
     }
     var arr = [];
-    for(var i=0; i<collection.length; i++) {
-      if(test(collection[i])) {
-        arr.push(collection[i]);
+    //for(var i=0; i<collection.length; i++) {
+      //if(test(collection[i])) {
+        //arr.push(collection[i]);
+      //}
+    //}
+    _.each(collection, function(x) {
+      if(test(x)) {
+        arr.push(x);
       }
-    }
+    });
     return arr;
   };
 
@@ -112,23 +117,33 @@ var _ = {};
   _.reject = function(collection, test) {
     // TIP: see if you can re-use _.filter() here, without simply
     // copying code in and modifying it
+    //return _.filter(collection, function(x){
+      //if(!test(x)) {
+        //return x;
+      //}
     return _.filter(collection, function(x){
-      if(!test(x)) {
-        return x;
-      }
+      return !test(x);
     });
-
   };
+
+  
 
   // Produce a duplicate-free version of the array.
   _.uniq = function(array) {
-    var set = {}, result = [];
-    for(var i=0; i<array.length; i++) {
-      if(!set.hasOwnProperty(array[i])) {
-        set[array[i]] = true;
-        result.push(array[i]);
-      }
-    }
+    var set = {};
+    var result = [];
+    //for(var i=0; i<array.length; i++) {
+      //if(!set.hasOwnProperty(array[i])) {
+        //set[array[i]] = true;
+        //result.push(array[i]);
+      //}
+    //}
+    _.each(array, function(x){
+      if(!set.hasOwnProperty(x)) {
+        set[x] = true;
+        result.push(x);
+      }      
+    });
     return result;
   };
 
@@ -150,7 +165,7 @@ var _ = {};
     var arr = [];
     _.each(collection, function(x){
       arr.push(iterator(x));
-    })  
+    });  
     return arr;
   };
 
@@ -176,7 +191,7 @@ var _ = {};
   // Note: you will nead to learn a bit about .apply to complete this.
   _.invoke = function(collection, functionOrKey, args) {
     return _.map(collection, function(x) {
-      return (functionOrKey.call ? functionOrKey || x : x[functionOrKey]).apply(x, args);
+      return (typeof(functionOrKey) === 'function' ? functionOrKey : x[functionOrKey]).apply(x, args);
     });
   };
 
@@ -199,7 +214,7 @@ var _ = {};
         accumulator = x;
       }
       accumulator = iterator(accumulator, x);
-    })
+    });
     return accumulator;
   };
 
@@ -219,15 +234,27 @@ var _ = {};
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+    if(!iterator) {
+      iterator = _.identity;
+    }
     return _.reduce(collection, function(pass, x){
       return !!iterator(x) && pass;
     }, true);
+  
+
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+    if(!iterator) {
+      iterator = _.identity;
+    }
+    return !(_.every(collection, function(x) {
+      return !iterator(x);
+    }));
+
   };
 
 
@@ -250,14 +277,37 @@ var _ = {};
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
-    
-
-
+    if(typeof obj !== 'object') {
+      return obj;
+    }
+    var source;
+    var x;
+    for(var i=1; i<arguments.length; i++) {
+      source = arguments[i];
+      for(x in source) {
+        obj[x] = source[x];
+      }
+    }
+    return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+   if(typeof obj !== 'object') {
+      return obj;
+    }
+    var source;
+    var x;
+    for(var i=1; i<arguments.length; i++) {
+      source = arguments[i];
+      for(x in source) {
+        if(obj[x] === undefined) {
+          obj[x] = source[x];
+        }
+      }
+    }
+    return obj;  
   };
 
 
@@ -299,6 +349,17 @@ var _ = {};
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    var memocheck = {};
+    return function() {
+      var args = Array.prototype.slice.call(arguments);
+      if(args in memocheck) {
+        return memocheck[args];
+      } else {
+        return (memocheck[args] = func.apply(this, args));
+      }
+    }
+
+
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -308,6 +369,11 @@ var _ = {};
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    var args = Array.prototype.slice.call(arguments, 2);
+    return setTimeout(function(){
+      return func.apply(null, args);
+    }, wait);
+
   };
 
 
@@ -322,6 +388,15 @@ var _ = {};
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    var base = array.slice();
+    var result = [];
+    for(var i=base.length; i>0; i--){
+      var j = Math.floor(Math.random() * i);
+      var temp = base[i];
+      base[i] = base[j];
+      base[j] = temp;
+    }
+    return base;
   };
 
 
